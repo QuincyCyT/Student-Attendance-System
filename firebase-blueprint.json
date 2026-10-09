@@ -1,0 +1,124 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "User account in the university attendance portal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "username": { "type": "string", "minLength": 3, "maxLength": 64 },
+        "email": { "type": "string", "format": "email", "maxLength": 128 },
+        "fullName": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "role": { "type": "string", "enum": ["instructor", "registrar"] },
+        "department": { "type": "string", "maxLength": 100 },
+        "password": { "type": "string", "minLength": 6, "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["username", "email", "fullName", "role"]
+    },
+    "student": {
+      "title": "Student",
+      "description": "Student enrolled in university programs and sections",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 64 },
+        "firstName": { "type": "string", "maxLength": 64 },
+        "lastName": { "type": "string", "maxLength": 64 },
+        "email": { "type": "string", "format": "email", "maxLength": 128 },
+        "yearLevel": { "type": "string", "maxLength": 32 },
+        "program": { "type": "string", "maxLength": 128 },
+        "sectionId": { "type": "string", "maxLength": 64 },
+        "avatar": { "type": "string", "maxLength": 256 }
+      },
+      "required": ["studentId", "firstName", "lastName", "email", "sectionId"]
+    },
+    "instructor": {
+      "title": "Instructor",
+      "description": "Faculty member or instructor",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "employeeId": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "format": "email", "maxLength": 128 },
+        "department": { "type": "string", "maxLength": 100 },
+        "title": { "type": "string", "maxLength": 100 },
+        "avatar": { "type": "string", "maxLength": 256 }
+      },
+      "required": ["employeeId", "name", "email", "department"]
+    },
+    "course": {
+      "title": "Course",
+      "description": "Academic course offering",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "code": { "type": "string", "maxLength": 32 },
+        "title": { "type": "string", "maxLength": 128 },
+        "units": { "type": "number" },
+        "department": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["code", "title", "units", "department"]
+    },
+    "section": {
+      "title": "Section",
+      "description": "Course section block with schedule and room",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 64 },
+        "sectionName": { "type": "string", "maxLength": 64 },
+        "schedule": { "type": "string", "maxLength": 128 },
+        "room": { "type": "string", "maxLength": 64 },
+        "instructorId": { "type": "string", "maxLength": 64 },
+        "capacity": { "type": "number" },
+        "semester": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["courseId", "sectionName", "schedule", "room", "instructorId"]
+    },
+    "attendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Daily student attendance record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "sectionId": { "type": "string", "maxLength": 64 },
+        "studentId": { "type": "string", "maxLength": 64 },
+        "date": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "enum": ["present", "late", "absent", "excused"] },
+        "remarks": { "type": "string", "maxLength": 256 },
+        "recordedAt": { "type": "string", "maxLength": 64 },
+        "recordedBy": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["sectionId", "studentId", "date", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "User profiles and credentials"
+    },
+    "/students/{studentId}": {
+      "schema": "student",
+      "description": "Students list and profile data"
+    },
+    "/instructors/{instructorId}": {
+      "schema": "instructor",
+      "description": "Instructors list"
+    },
+    "/courses/{courseId}": {
+      "schema": "course",
+      "description": "Course catalog offerings"
+    },
+    "/sections/{sectionId}": {
+      "schema": "section",
+      "description": "Class sections and schedules"
+    },
+    "/attendanceRecords/{recordId}": {
+      "schema": "attendanceRecord",
+      "description": "Individual student attendance entries"
+    }
+  }
+}

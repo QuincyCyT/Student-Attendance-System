@@ -1,0 +1,7 @@
+{
+  "name": "Students Attendance System",
+  "description": "Role-based student attendance management system for Instructors and Registrars with comprehensive CRUD operations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

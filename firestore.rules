@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default deny all unknown collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128;
+    }
+
+    function isValidUser(data) {
+      return data.username is string && data.username.size() >= 2 && data.username.size() <= 64
+        && data.email is string && data.email.size() <= 128
+        && data.fullName is string && data.fullName.size() <= 128
+        && data.role in ['instructor', 'registrar'];
+    }
+
+    function isValidStudent(data) {
+      return data.studentId is string && data.studentId.size() <= 64
+        && data.fullName is string && data.fullName.size() <= 128
+        && data.email is string && data.email.size() <= 128;
+    }
+
+    function isValidInstructor(data) {
+      return data.employeeId is string && data.employeeId.size() <= 64
+        && data.fullName is string && data.fullName.size() <= 128
+        && data.email is string && data.email.size() <= 128;
+    }
+
+    function isValidCourse(data) {
+      return data.code is string && data.code.size() <= 32
+        && data.title is string && data.title.size() <= 128;
+    }
+
+    function isValidSection(data) {
+      return data.name is string && data.name.size() <= 64
+        && data.courseId is string && data.courseId.size() <= 64;
+    }
+
+    function isValidAttendanceRecord(data) {
+      return data.sectionId is string && data.sectionId.size() <= 64
+        && data.studentId is string && data.studentId.size() <= 64
+        && data.date is string && data.date.size() <= 32;
+    }
+
+    // Collection: Users
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if isValidId(userId) && isValidUser(request.resource.data);
+      allow delete: if isValidId(userId);
+    }
+
+    // Collection: Students
+    match /students/{studentId} {
+      allow read: if true;
+      allow create, update: if isValidId(studentId) && isValidStudent(request.resource.data);
+      allow delete: if isValidId(studentId);
+    }
+
+    // Collection: Instructors
+    match /instructors/{instructorId} {
+      allow read: if true;
+      allow create, update: if isValidId(instructorId) && isValidInstructor(request.resource.data);
+      allow delete: if isValidId(instructorId);
+    }
+
+    // Collection: Courses
+    match /courses/{courseId} {
+      allow read: if true;
+      allow create, update: if isValidId(courseId) && isValidCourse(request.resource.data);
+      allow delete: if isValidId(courseId);
+    }
+
+    // Collection: Sections
+    match /sections/{sectionId} {
+      allow read: if true;
+      allow create, update: if isValidId(sectionId) && isValidSection(request.resource.data);
+      allow delete: if isValidId(sectionId);
+    }
+
+    // Collection: Attendance Records
+    match /attendanceRecords/{recordId} {
+      allow read: if true;
+      allow create, update: if isValidId(recordId) && isValidAttendanceRecord(request.resource.data);
+      allow delete: if isValidId(recordId);
+    }
+
+    // Connection test document
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}
