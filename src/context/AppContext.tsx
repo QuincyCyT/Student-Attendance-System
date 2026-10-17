@@ -125,6 +125,19 @@ const LOCAL_STORAGE_KEYS = {
   ATTENDANCE: 'sas_attendance',
 };
 
+function mergeById<T extends { id: string }>(existing: T[], incoming: T[]): T[] {
+  const map = new Map<string, T>();
+  existing.forEach((item) => {
+    if (item && item.id) map.set(item.id, item);
+  });
+  incoming.forEach((item) => {
+    if (item && item.id) {
+      map.set(item.id, { ...(map.get(item.id) || {}), ...item });
+    }
+  });
+  return Array.from(map.values());
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
@@ -143,7 +156,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return parsed;
         }
       }
-      // Never fall back to a mock user. Unauthenticated users must see the login page first.
       return null;
     } catch {
       return null;
@@ -153,7 +165,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [users, setUsers] = useState<User[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.USERS);
-      return saved ? JSON.parse(saved) : INITIAL_USERS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return mergeById(INITIAL_USERS, parsed);
+        }
+      }
+      return INITIAL_USERS;
     } catch {
       return INITIAL_USERS;
     }
@@ -162,7 +180,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [students, setStudents] = useState<Student[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.STUDENTS);
-      return saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return mergeById(INITIAL_STUDENTS, parsed);
+        }
+      }
+      return INITIAL_STUDENTS;
     } catch {
       return INITIAL_STUDENTS;
     }
@@ -171,7 +195,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [instructors, setInstructors] = useState<Instructor[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.INSTRUCTORS);
-      return saved ? JSON.parse(saved) : INITIAL_INSTRUCTORS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return mergeById(INITIAL_INSTRUCTORS, parsed);
+        }
+      }
+      return INITIAL_INSTRUCTORS;
     } catch {
       return INITIAL_INSTRUCTORS;
     }
@@ -180,7 +210,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [courses, setCourses] = useState<Course[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.COURSES);
-      return saved ? JSON.parse(saved) : INITIAL_COURSES;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return mergeById(INITIAL_COURSES, parsed);
+        }
+      }
+      return INITIAL_COURSES;
     } catch {
       return INITIAL_COURSES;
     }
@@ -189,7 +225,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [sections, setSections] = useState<Section[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.SECTIONS);
-      return saved ? JSON.parse(saved) : INITIAL_SECTIONS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return mergeById(INITIAL_SECTIONS, parsed);
+        }
+      }
+      return INITIAL_SECTIONS;
     } catch {
       return INITIAL_SECTIONS;
     }
@@ -198,7 +240,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.ATTENDANCE);
-      return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return mergeById(INITIAL_ATTENDANCE, parsed);
+        }
+      }
+      return INITIAL_ATTENDANCE;
     } catch {
       return INITIAL_ATTENDANCE;
     }
@@ -226,22 +274,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsDatabaseReady(true);
 
         const unsubUsers = subscribeToUsers((dbUsers) => {
-          if (dbUsers.length > 0) setUsers(dbUsers);
+          if (dbUsers.length > 0) setUsers((prev) => mergeById(prev, dbUsers));
         });
         const unsubStudents = subscribeToStudents((dbStudents) => {
-          if (dbStudents.length > 0) setStudents(dbStudents);
+          if (dbStudents.length > 0) setStudents((prev) => mergeById(prev, dbStudents));
         });
         const unsubInstructors = subscribeToInstructors((dbInstructors) => {
-          if (dbInstructors.length > 0) setInstructors(dbInstructors);
+          if (dbInstructors.length > 0) setInstructors((prev) => mergeById(prev, dbInstructors));
         });
         const unsubCourses = subscribeToCourses((dbCourses) => {
-          if (dbCourses.length > 0) setCourses(dbCourses);
+          if (dbCourses.length > 0) setCourses((prev) => mergeById(prev, dbCourses));
         });
         const unsubSections = subscribeToSections((dbSections) => {
-          if (dbSections.length > 0) setSections(dbSections);
+          if (dbSections.length > 0) setSections((prev) => mergeById(prev, dbSections));
         });
         const unsubAtt = subscribeToAttendance((dbAtt) => {
-          if (dbAtt.length > 0) setAttendanceRecords(dbAtt);
+          if (dbAtt.length > 0) setAttendanceRecords((prev) => mergeById(prev, dbAtt));
         });
 
         unsubs = [
@@ -258,22 +306,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const supaStatus = await checkSupabaseStatus();
           if (supaStatus.tablesReady) {
             const unsubSupaUsers = subscribeToSupabaseUsers((dbUsers) => {
-              if (dbUsers.length > 0) setUsers(dbUsers);
+              if (dbUsers.length > 0) setUsers((prev) => mergeById(prev, dbUsers));
             });
             const unsubSupaStudents = subscribeToSupabaseStudents((dbStudents) => {
-              if (dbStudents.length > 0) setStudents(dbStudents);
+              if (dbStudents.length > 0) setStudents((prev) => mergeById(prev, dbStudents));
             });
             const unsubSupaInstructors = subscribeToSupabaseInstructors((dbInstructors) => {
-              if (dbInstructors.length > 0) setInstructors(dbInstructors);
+              if (dbInstructors.length > 0) setInstructors((prev) => mergeById(prev, dbInstructors));
             });
             const unsubSupaCourses = subscribeToSupabaseCourses((dbCourses) => {
-              if (dbCourses.length > 0) setCourses(dbCourses);
+              if (dbCourses.length > 0) setCourses((prev) => mergeById(prev, dbCourses));
             });
             const unsubSupaSections = subscribeToSupabaseSections((dbSections) => {
-              if (dbSections.length > 0) setSections(dbSections);
+              if (dbSections.length > 0) setSections((prev) => mergeById(prev, dbSections));
             });
             const unsubSupaAtt = subscribeToSupabaseAttendance((dbAtt) => {
-              if (dbAtt.length > 0) setAttendanceRecords(dbAtt);
+              if (dbAtt.length > 0) setAttendanceRecords((prev) => mergeById(prev, dbAtt));
             });
             unsubs.push(
               unsubSupaUsers,
@@ -417,8 +465,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
     };
 
-    setUsers((prev) => [...prev, newUser]);
-    // Save to real Firestore database
+    setUsers((prev) => {
+      const updated = [...prev.filter((u) => u.id !== newUser.id), newUser];
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.USERS, JSON.stringify(updated));
+      } catch {
+        // Safe ignore
+      }
+      return updated;
+    });
+    // Save to real Firestore database and Supabase
     saveUserToDb(newUser);
 
     // If role is instructor, automatically add to instructors directory in Firestore too
