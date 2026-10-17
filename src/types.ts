@@ -1,4 +1,4 @@
-export type UserRole = 'instructor' | 'registrar';
+export type UserRole = 'instructor' | 'registrar' | 'super_admin';
 
 export interface User {
   id: string;
@@ -59,7 +59,7 @@ export interface AttendanceRecord {
   studentId: string;
   status: AttendanceStatus;
   remarks?: string;
-  markedByUserId: string;
+  markedByUserId?: string;
   createdAt: string;
 }
 

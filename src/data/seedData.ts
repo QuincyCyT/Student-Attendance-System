@@ -23,6 +23,17 @@ export const INITIAL_USERS: User[] = [
     employeeId: 'REG-001',
     createdAt: '2024-01-10T08:00:00Z',
   },
+  {
+    id: 'user-admin-1',
+    username: 'super.admin',
+    password: 'password123',
+    fullName: 'Dean Alexander Wright',
+    email: 'admin@university.edu',
+    role: 'super_admin',
+    department: 'Office of the Vice President for Academic Affairs',
+    employeeId: 'ADM-001',
+    createdAt: '2024-01-01T08:00:00Z',
+  },
 ];
 
 export const INITIAL_INSTRUCTORS: Instructor[] = [

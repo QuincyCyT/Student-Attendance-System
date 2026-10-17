@@ -10,6 +10,7 @@ import {
   ArrowRight,
   GraduationCap,
   Building2,
+  ShieldCheck,
   AlertCircle,
   CheckCircle,
 } from 'lucide-react';
@@ -17,7 +18,7 @@ import {
 export const LoginScreen: React.FC = () => {
   const { login, loginWithGoogle, setActiveView, isDatabaseReady } = useApp();
 
-  const [selectedRole, setSelectedRole] = useState<'instructor' | 'registrar'>('instructor');
+  const [selectedRole, setSelectedRole] = useState<'instructor' | 'registrar' | 'super_admin'>('instructor');
   const [email, setEmail] = useState('prof.miller@jrmsu.edu.ph');
   const [password, setPassword] = useState('password123');
   const [rememberMe, setRememberMe] = useState(false);
@@ -26,15 +27,18 @@ export const LoginScreen: React.FC = () => {
   const [infoMessage, setInfoMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleRoleChange = (role: 'instructor' | 'registrar') => {
+  const handleRoleChange = (role: 'instructor' | 'registrar' | 'super_admin') => {
     setSelectedRole(role);
     setErrorMessage('');
     setInfoMessage('');
     if (role === 'instructor') {
       setEmail('prof.miller@jrmsu.edu.ph');
       setPassword('password123');
-    } else {
+    } else if (role === 'registrar') {
       setEmail('reg.davis@jrmsu.edu.ph');
+      setPassword('password123');
+    } else {
+      setEmail('admin@university.edu');
       setPassword('password123');
     }
   };
@@ -81,8 +85,13 @@ export const LoginScreen: React.FC = () => {
       }
 
       // If still not matched, check role demo account fallback
-      if (!result.success && enteredLogin.includes('example@jrmsu.edu.ph')) {
-        const fallbackUser = selectedRole === 'instructor' ? 'prof.miller' : 'reg.davis';
+      if (!result.success && (enteredLogin.includes('example@jrmsu.edu.ph') || enteredLogin === 'admin@university.edu')) {
+        const fallbackUser =
+          selectedRole === 'super_admin'
+            ? 'super.admin'
+            : selectedRole === 'instructor'
+            ? 'prof.miller'
+            : 'reg.davis';
         result = login(fallbackUser, 'password123', rememberMe);
       }
 
@@ -161,19 +170,19 @@ export const LoginScreen: React.FC = () => {
           {/* White Rounded Card with Soft Shadow (~12px corner radius) */}
           <div className="w-full max-w-[420px] bg-white rounded-[12px] border border-purple-100/90 shadow-xl shadow-purple-950/5 p-5 sm:p-7 md:p-8">
             
-            {/* Segmented Pill-Shaped Toggle (Instructor vs Registrar) */}
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#FAF2F8] rounded-[10px] border border-purple-100 mb-5">
+            {/* Segmented Pill-Shaped Toggle (Instructor vs Registrar vs Super Admin) */}
+            <div className="grid grid-cols-3 gap-1 p-1 bg-[#FAF2F8] rounded-[10px] border border-purple-100 mb-5 text-[11px]">
               <button
                 id="role-tab-instructor"
                 type="button"
                 onClick={() => handleRoleChange('instructor')}
-                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-[8px] text-xs font-bold transition-all ${
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-[8px] font-bold transition-all ${
                   selectedRole === 'instructor'
                     ? 'bg-[#5B3765] text-white shadow-xs'
                     : 'bg-transparent text-[#5B3765] hover:bg-white/60'
                 }`}
               >
-                <GraduationCap className={`w-4 h-4 ${selectedRole === 'instructor' ? 'text-purple-200' : 'text-[#5B3765]'}`} />
+                <GraduationCap className={`w-3.5 h-3.5 ${selectedRole === 'instructor' ? 'text-purple-200' : 'text-[#5B3765]'}`} />
                 <span>Instructor</span>
               </button>
 
@@ -181,14 +190,28 @@ export const LoginScreen: React.FC = () => {
                 id="role-tab-registrar"
                 type="button"
                 onClick={() => handleRoleChange('registrar')}
-                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-[8px] text-xs font-bold transition-all ${
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-[8px] font-bold transition-all ${
                   selectedRole === 'registrar'
                     ? 'bg-[#5B3765] text-white shadow-xs'
                     : 'bg-transparent text-[#5B3765] hover:bg-white/60'
                 }`}
               >
-                <Building2 className={`w-4 h-4 ${selectedRole === 'registrar' ? 'text-purple-200' : 'text-[#5B3765]'}`} />
+                <Building2 className={`w-3.5 h-3.5 ${selectedRole === 'registrar' ? 'text-purple-200' : 'text-[#5B3765]'}`} />
                 <span>Registrar</span>
+              </button>
+
+              <button
+                id="role-tab-superadmin"
+                type="button"
+                onClick={() => handleRoleChange('super_admin')}
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-[8px] font-bold transition-all ${
+                  selectedRole === 'super_admin'
+                    ? 'bg-[#5B3765] text-white shadow-xs'
+                    : 'bg-transparent text-[#5B3765] hover:bg-white/60'
+                }`}
+              >
+                <ShieldCheck className={`w-3.5 h-3.5 ${selectedRole === 'super_admin' ? 'text-amber-300' : 'text-[#5B3765]'}`} />
+                <span>Admin</span>
               </button>
             </div>
 

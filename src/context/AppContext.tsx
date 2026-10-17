@@ -79,7 +79,6 @@ interface AppContextType {
   ) => { success: boolean; error?: string; user?: User };
   loginWithGoogle: () => Promise<{ success: boolean; error?: string; cancelled?: boolean }>;
   logout: () => void;
-  switchUser: (role: 'instructor' | 'registrar') => void;
   // Student CRUD
   addStudent: (student: Omit<Student, 'id'>) => Student;
   updateStudent: (id: string, updates: Partial<Student>) => void;
@@ -543,20 +542,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const switchUser = (role: 'instructor' | 'registrar') => {
-    if (!currentUser) return; // Prevent role switching when unauthenticated
-    const target = users.find((u) => u.role === role);
-    if (target) {
-      setCurrentUser(target);
-      try {
-        sessionStorage.setItem(LOCAL_STORAGE_KEYS.CURRENT_USER, JSON.stringify(target));
-      } catch {
-        // Safe ignore
-      }
-      setActiveView('dashboard');
-    }
-  };
-
   // Student CRUD
   const addStudent = (studentData: Omit<Student, 'id'>): Student => {
     const newStudent: Student = {
@@ -731,14 +716,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetToSampleData = async () => {
-    setCurrentUser(INITIAL_USERS[0]);
     setUsers(INITIAL_USERS);
     setStudents(INITIAL_STUDENTS);
     setInstructors(INITIAL_INSTRUCTORS);
     setCourses(INITIAL_COURSES);
     setSections(INITIAL_SECTIONS);
     setAttendanceRecords(INITIAL_ATTENDANCE);
-    localStorage.clear();
     await resetDatabaseToSampleData();
   };
 
@@ -760,7 +743,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         signup,
         loginWithGoogle,
         logout,
-        switchUser,
         addStudent,
         updateStudent,
         deleteStudent,

@@ -3,23 +3,45 @@ import { useApp } from '../context/AppContext';
 import {
   LogOut,
   RotateCcw,
-  UserCheck,
-  Building2,
   Search,
   Bell,
   Menu,
   X,
+  ShieldCheck,
+  UserCheck,
+  Building2,
 } from 'lucide-react';
 
 import { PantherLogo } from './PantherLogo';
 
 export const Header: React.FC = () => {
-  const { currentUser, logout, switchUser, resetToSampleData } = useApp();
+  const { currentUser, logout, resetToSampleData } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!currentUser) return null;
 
-  const isInstructor = currentUser.role === 'instructor';
+  const roleLabel =
+    currentUser.role === 'super_admin'
+      ? 'Super Admin'
+      : currentUser.role === 'registrar'
+      ? 'Registrar'
+      : 'Instructor';
+
+  const roleIcon =
+    currentUser.role === 'super_admin' ? (
+      <ShieldCheck className="w-3 h-3 text-amber-600" />
+    ) : currentUser.role === 'registrar' ? (
+      <Building2 className="w-3 h-3 text-purple-600" />
+    ) : (
+      <UserCheck className="w-3 h-3 text-[#5B3765]" />
+    );
+
+  const roleBadgeStyle =
+    currentUser.role === 'super_admin'
+      ? 'bg-amber-50 text-amber-900 border-amber-200'
+      : currentUser.role === 'registrar'
+      ? 'bg-purple-50 text-purple-900 border-purple-200'
+      : 'bg-[#FAF0F7] text-[#5B3765] border-[#EEDEEB]';
 
   return (
     <header className="bg-white/95 backdrop-blur-md border-b border-[#EEDEEB] sticky top-0 z-30 shadow-xs shadow-purple-950/5">
@@ -41,7 +63,7 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Center: Semester Pill & Global Search (matching image.png) */}
+          {/* Center: Semester Pill & Global Search */}
           <div className="hidden md:flex items-center gap-2.5 lg:gap-3 flex-1 max-w-xl mx-2 lg:mx-4">
             {/* Semester Pill */}
             <div className="shrink-0 px-2.5 py-1 rounded-full bg-[#FAF0F7] border border-[#EEDEEB] text-[10.5px] lg:text-[11px] font-bold text-[#5B3765] tracking-wide uppercase">
@@ -61,34 +83,10 @@ export const Header: React.FC = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Quick Demo Role Switcher (Desktop) */}
-            <div className="hidden lg:flex items-center bg-[#FAF0F7] p-0.5 rounded-xl border border-[#EEDEEB] text-xs">
-              <button
-                id="btn-switch-instructor"
-                type="button"
-                onClick={() => switchUser('instructor')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold transition-all ${
-                  isInstructor
-                    ? 'bg-[#5B3765] text-white shadow-xs'
-                    : 'text-[#6F5174] hover:text-[#5B3765]'
-                }`}
-              >
-                <UserCheck className="w-3 h-3" />
-                Instructor
-              </button>
-              <button
-                id="btn-switch-registrar"
-                type="button"
-                onClick={() => switchUser('registrar')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold transition-all ${
-                  !isInstructor
-                    ? 'bg-[#5B3765] text-white shadow-xs'
-                    : 'text-[#6F5174] hover:text-[#5B3765]'
-                }`}
-              >
-                <Building2 className="w-3 h-3" />
-                Registrar
-              </button>
+            {/* Role Authenticated Pill (Read-Only) */}
+            <div className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${roleBadgeStyle}`}>
+              {roleIcon}
+              <span>{roleLabel}</span>
             </div>
 
             {/* Reset Data (Desktop / Tablet) */}
@@ -108,7 +106,7 @@ export const Header: React.FC = () => {
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#5B3765] rounded-full" />
             </div>
 
-            {/* User Profile Pill matching image.png */}
+            {/* User Profile Pill */}
             <div className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-2.5 border-l border-[#EEDEEB]">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FAF0F7] border border-[#5B3765]/20 flex items-center justify-center text-[#5B3765] font-bold text-[11px] sm:text-xs shadow-xs shrink-0">
                 {currentUser.fullName
@@ -123,7 +121,7 @@ export const Header: React.FC = () => {
                   {currentUser.fullName}
                 </div>
                 <div className="text-[10px] text-[#86688D] font-medium capitalize">
-                  {currentUser.role}
+                  {roleLabel}
                 </div>
               </div>
             </div>
@@ -160,8 +158,9 @@ export const Header: React.FC = () => {
           <div className="flex items-center justify-between pb-2 border-b border-[#FAF0F7]">
             <div className="text-left">
               <div className="text-xs font-bold text-[#27182C]">{currentUser.fullName}</div>
-              <div className="text-[10px] text-[#86688D] capitalize font-medium">
-                Signed in as {currentUser.role}
+              <div className="text-[10px] text-[#86688D] font-medium flex items-center gap-1 mt-0.5">
+                {roleIcon}
+                <span>Role: {roleLabel}</span>
               </div>
             </div>
             <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[#FAF0F7] text-[#5B3765] border border-[#EEDEEB]">
@@ -169,46 +168,7 @@ export const Header: React.FC = () => {
             </span>
           </div>
 
-          {/* Quick Role Switcher on mobile */}
-          <div>
-            <div className="text-[10px] font-bold text-[#86688D] uppercase tracking-wider mb-1.5">
-              Switch Role View
-            </div>
-            <div className="grid grid-cols-2 gap-2 bg-[#FAF0F7] p-1 rounded-xl border border-[#EEDEEB] text-xs">
-              <button
-                type="button"
-                onClick={() => {
-                  switchUser('instructor');
-                  setMobileMenuOpen(false);
-                }}
-                className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg font-bold text-xs transition-all ${
-                  isInstructor
-                    ? 'bg-[#5B3765] text-white shadow-xs'
-                    : 'text-[#6F5174] hover:text-[#5B3765]'
-                }`}
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                Instructor
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  switchUser('registrar');
-                  setMobileMenuOpen(false);
-                }}
-                className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg font-bold text-xs transition-all ${
-                  !isInstructor
-                    ? 'bg-[#5B3765] text-white shadow-xs'
-                    : 'text-[#6F5174] hover:text-[#5B3765]'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                Registrar
-              </button>
-            </div>
-          </div>
-
-          {/* Reset Sample Data */}
+          {/* Reset Sample Data on mobile */}
           <div className="pt-1">
             <button
               type="button"
