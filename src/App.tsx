@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/Header';
 import { LoginScreen } from './components/auth/LoginScreen';
@@ -41,12 +41,28 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const MainLayout: React.FC = () => {
   const { currentUser, activeView, setActiveView } = useApp();
   const [unauthorizedAttempt, setUnauthorizedAttempt] = useState<string | null>(null);
+  const currentUserRef = useRef(currentUser);
+
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
 
   // Authentication & URL hash synchronization with automatic redirection and route guards
   useEffect(() => {
     const syncRouteWithHash = () => {
       if (typeof window === 'undefined') return;
       const hash = window.location.hash.toLowerCase();
+
+      // Ensure fresh user check to prevent stale closure on immediate login
+      let user = currentUserRef.current;
+      if (!user) {
+        try {
+          const sess = sessionStorage.getItem('sas_current_user') || localStorage.getItem('sas_current_user');
+          if (sess) user = JSON.parse(sess);
+        } catch {
+          // Ignore
+        }
+      }
 
       if (hash === '#signup') {
         setActiveView('signup');
@@ -55,7 +71,7 @@ const MainLayout: React.FC = () => {
       }
 
       if (hash === '#login' || hash === '') {
-        if (!currentUser) {
+        if (!user) {
           setActiveView('login');
           setUnauthorizedAttempt(null);
         }
@@ -63,7 +79,7 @@ const MainLayout: React.FC = () => {
       }
 
       // Check if unauthenticated user is trying to access protected areas
-      if (!currentUser) {
+      if (!user) {
         setActiveView('login');
         setUnauthorizedAttempt(null);
         window.history.replaceState(null, '', window.location.pathname);
@@ -72,17 +88,17 @@ const MainLayout: React.FC = () => {
 
       // Route Guards: Check role authorization when user types role-specific URL hashes
       if (hash === '#admin' || hash === '#super-admin') {
-        if (currentUser.role !== 'super_admin') {
+        if (user.role !== 'super_admin') {
           setUnauthorizedAttempt('Super Admin');
           return;
         }
       } else if (hash === '#registrar') {
-        if (currentUser.role !== 'registrar' && currentUser.role !== 'super_admin') {
+        if (user.role !== 'registrar' && user.role !== 'super_admin') {
           setUnauthorizedAttempt('Registrar');
           return;
         }
       } else if (hash === '#instructor') {
-        if (currentUser.role !== 'instructor' && currentUser.role !== 'super_admin') {
+        if (user.role !== 'instructor' && user.role !== 'super_admin') {
           setUnauthorizedAttempt('Instructor');
           return;
         }
@@ -98,7 +114,7 @@ const MainLayout: React.FC = () => {
 
     window.addEventListener('hashchange', syncRouteWithHash);
     return () => window.removeEventListener('hashchange', syncRouteWithHash);
-  }, [currentUser, setActiveView]);
+  }, [setActiveView]);
 
   // Enforce redirection to login if currentUser is cleared
   useEffect(() => {

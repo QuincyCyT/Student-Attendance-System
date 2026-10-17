@@ -42,21 +42,19 @@ export const LoginScreen: React.FC = () => {
     const enteredLogin = email.trim();
     const passToLogin = password.trim();
 
-    setTimeout(() => {
-      // Authenticate with exact username or email
-      let result = login(enteredLogin, passToLogin, rememberMe);
+    // Authenticate with exact username or email
+    let result = login(enteredLogin, passToLogin, rememberMe);
 
-      // If user typed an institutional email, also check against prefix username
-      if (!result.success && enteredLogin.includes('@')) {
-        const usernamePart = enteredLogin.split('@')[0];
-        result = login(usernamePart, passToLogin, rememberMe);
-      }
+    // If user typed an institutional email, also check against prefix username
+    if (!result.success && enteredLogin.includes('@')) {
+      const usernamePart = enteredLogin.split('@')[0];
+      result = login(usernamePart, passToLogin, rememberMe);
+    }
 
-      if (!result.success) {
-        setErrorMessage(result.error || 'Invalid credentials. Please verify your details.');
-      }
+    if (!result.success) {
+      setErrorMessage(result.error || 'Invalid credentials. Please verify your details.');
       setIsLoading(false);
-    }, 200);
+    }
   };
 
   return (
