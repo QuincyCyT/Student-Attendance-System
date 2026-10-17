@@ -3,7 +3,6 @@ import { useApp } from '../context/AppContext';
 import {
   LogOut,
   Search,
-  Bell,
   Menu,
   X,
   ShieldCheck,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import { PantherLogo } from './PantherLogo';
+import { NotificationBell } from './notifications/NotificationBell';
 
 export const Header: React.FC = () => {
   const { currentUser, logout } = useApp();
@@ -88,11 +88,8 @@ export const Header: React.FC = () => {
               <span>{roleLabel}</span>
             </div>
 
-            {/* Notification Bell */}
-            <div className="p-1.5 text-[#86688D] hover:text-[#5B3765] hover:bg-[#FAF0F7] rounded-xl transition-colors relative cursor-pointer hidden md:block">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#5B3765] rounded-full" />
-            </div>
+            {/* Notification Bell with Role-Specific Alerts */}
+            <NotificationBell />
 
             {/* User Profile Pill */}
             <div className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-2.5 border-l border-[#EEDEEB]">

@@ -74,3 +74,21 @@ export interface AttendanceSummary {
   excusedCount: number;
   percentage: number;
 }
+
+export type NotificationType = 'risk' | 'reminder' | 'roster' | 'approval' | 'capacity' | 'audit';
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  timestamp: string;
+  isRead: boolean;
+  priority: 'high' | 'medium' | 'info';
+  metadata?: {
+    studentId?: string;
+    sectionId?: string;
+    courseCode?: string;
+    linkView?: string;
+  };
+}
