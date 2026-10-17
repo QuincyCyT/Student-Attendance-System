@@ -48,7 +48,6 @@ export async function seedInitialDatabaseIfEmpty() {
       return;
     }
 
-    console.log('Seeding initial university data into Firestore...');
     const batch = writeBatch(db);
 
     // Initial users
@@ -88,8 +87,7 @@ export async function seedInitialDatabaseIfEmpty() {
     });
 
     await batch.commit();
-    console.log('Firestore seed completed successfully!');
-    // Attempt Supabase seed if tables ready
+    // Synchronize initial dataset if needed
     SupabaseSync.seedSupabaseIfEmpty().catch(() => {});
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, 'initial_seed');

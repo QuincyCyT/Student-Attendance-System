@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-export const DEFAULT_SUPABASE_URL = 'https://cjghzrwmyasithmlekoc.supabase.co';
-export const DEFAULT_SUPABASE_KEY = 'sb_publishable_rioDf3rHe6X2dyYw5cmoNQ_033ViyO5';
+const FALLBACK_URL = 'https://cjghzrwmyasithmlekoc.supabase.co';
+const FALLBACK_KEY = 'sb_publishable_rioDf3rHe6X2dyYw5cmoNQ_033ViyO5';
 
 function isValidHttpUrl(stringCandidate?: string | null): boolean {
   if (!stringCandidate || typeof stringCandidate !== 'string') return false;
@@ -23,7 +23,7 @@ function isValidHttpUrl(stringCandidate?: string | null): boolean {
   }
 }
 
-function resolveSupabaseConfig(): { url: string; key: string } {
+function resolveConfig(): { url: string; key: string } {
   let envUrl: string | undefined;
   let envKey: string | undefined;
 
@@ -36,7 +36,7 @@ function resolveSupabaseConfig(): { url: string; key: string } {
     // Ignore environment access errors
   }
 
-  const url = isValidHttpUrl(envUrl) ? envUrl!.trim() : DEFAULT_SUPABASE_URL;
+  const url = isValidHttpUrl(envUrl) ? envUrl!.trim() : FALLBACK_URL;
   const key =
     envKey &&
     envKey.trim() !== '' &&
@@ -44,12 +44,12 @@ function resolveSupabaseConfig(): { url: string; key: string } {
     envKey !== 'null' &&
     !envKey.startsWith('MY_')
       ? envKey.trim()
-      : DEFAULT_SUPABASE_KEY;
+      : FALLBACK_KEY;
 
   return { url, key };
 }
 
-const config = resolveSupabaseConfig();
+const config = resolveConfig();
 
 export const SUPABASE_URL = config.url;
 export const SUPABASE_ANON_KEY = config.key;
@@ -62,9 +62,8 @@ function initClient(): SupabaseClient {
         autoRefreshToken: true,
       },
     });
-  } catch (err) {
-    console.error('Failed to initialize Supabase client with config:', SUPABASE_URL, err);
-    return createClient(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_KEY);
+  } catch {
+    return createClient(FALLBACK_URL, FALLBACK_KEY);
   }
 }
 

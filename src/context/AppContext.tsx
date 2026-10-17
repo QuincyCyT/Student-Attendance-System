@@ -68,8 +68,11 @@ interface AppContextType {
   activeView: 'login' | 'signup' | 'dashboard';
   setActiveView: (view: 'login' | 'signup' | 'dashboard') => void;
   isDatabaseReady: boolean;
-  // Auth
-  login: (username: string, password: string) => { success: boolean; error?: string };
+  login: (
+    username: string,
+    password: string,
+    rememberMe?: boolean
+  ) => { success: boolean; error?: string };
   signup: (
     userData: Omit<User, 'id' | 'createdAt'>,
     autoLogin?: boolean
@@ -126,10 +129,25 @@ const LOCAL_STORAGE_KEYS = {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.CURRENT_USER);
-      return saved ? JSON.parse(saved) : INITIAL_USERS[0];
+      // Check session storage first, then local storage
+      const sessionSaved = sessionStorage.getItem(LOCAL_STORAGE_KEYS.CURRENT_USER);
+      if (sessionSaved) {
+        const parsed = JSON.parse(sessionSaved);
+        if (parsed && typeof parsed === 'object' && parsed.id && parsed.role) {
+          return parsed;
+        }
+      }
+      const localSaved = localStorage.getItem(LOCAL_STORAGE_KEYS.CURRENT_USER);
+      if (localSaved) {
+        const parsed = JSON.parse(localSaved);
+        if (parsed && typeof parsed === 'object' && parsed.id && parsed.role) {
+          return parsed;
+        }
+      }
+      // Never fall back to a mock user. Unauthenticated users must see the login page first.
+      return null;
     } catch {
-      return INITIAL_USERS[0];
+      return null;
     }
   });
 
@@ -187,9 +205,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  const [activeView, setActiveView] = useState<'login' | 'signup' | 'dashboard'>(
-    currentUser ? 'dashboard' : 'login'
-  );
+  // The login page is strictly the default landing page for fresh access.
+  const [activeView, setActiveView] = useState<'login' | 'signup' | 'dashboard'>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#signup') return 'signup';
+    }
+    // Only allow dashboard on initial load if user already has an active authenticated session
+    return currentUser ? 'dashboard' : 'login';
+  });
 
   const [isDatabaseReady, setIsDatabaseReady] = useState<boolean>(false);
 
@@ -230,7 +254,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           unsubAtt,
         ];
 
-        // Also connect to Supabase Realtime if tables are ready
+        // Connect to Realtime subscriptions quietly
         try {
           const supaStatus = await checkSupabaseStatus();
           if (supaStatus.tablesReady) {
@@ -261,11 +285,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               unsubSupaAtt
             );
           }
-        } catch (supaErr) {
-          console.warn('Supabase realtime listener setup warning:', supaErr);
+        } catch {
+          // Quiet fallback
         }
-      } catch (err) {
-        console.error('Failed to initialize database subscriptions:', err);
+      } catch {
+        // Quiet fallback
       }
     };
 
@@ -276,12 +300,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
-  // Sync to local storage for quick cache
+  // Sync active user to session storage
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(LOCAL_STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem(LOCAL_STORAGE_KEYS.CURRENT_USER);
+    try {
+      if (currentUser) {
+        sessionStorage.setItem(LOCAL_STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+        if (localStorage.getItem(LOCAL_STORAGE_KEYS.CURRENT_USER)) {
+          localStorage.setItem(LOCAL_STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+        }
+      } else {
+        sessionStorage.removeItem(LOCAL_STORAGE_KEYS.CURRENT_USER);
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.CURRENT_USER);
+      }
+    } catch {
+      // Safe ignore
     }
   }, [currentUser]);
 
@@ -310,7 +342,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [attendanceRecords]);
 
   // Auth Functions
-  const login = (username: string, password: string): { success: boolean; error?: string } => {
+  const login = (
+    username: string,
+    password: string,
+    rememberMe: boolean = false
+  ): { success: boolean; error?: string } => {
     const trimmedUser = username.trim().toLowerCase();
     const user = users.find(
       (u) =>
@@ -326,7 +362,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     setCurrentUser(user);
+    try {
+      if (rememberMe) {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+      } else {
+        sessionStorage.setItem(LOCAL_STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.CURRENT_USER);
+      }
+    } catch {
+      // Safe ignore
+    }
     setActiveView('dashboard');
+    if (typeof window !== 'undefined') {
+      window.location.hash = '#dashboard';
+    }
     return { success: true };
   };
 
@@ -437,7 +486,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       setCurrentUser(matchedUser);
+      try {
+        sessionStorage.setItem(LOCAL_STORAGE_KEYS.CURRENT_USER, JSON.stringify(matchedUser));
+      } catch {
+        // Safe ignore
+      }
       setActiveView('dashboard');
+      if (typeof window !== 'undefined') {
+        window.location.hash = '#dashboard';
+      }
       return { success: true };
     } catch (error: any) {
       const errorCode = error?.code || '';
@@ -464,23 +521,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
 
-      console.warn('Google Sign-In notice:', errorMessage);
       return {
         success: false,
-        error: errorMessage || 'Google sign-in could not be completed. Please try again or use your password credentials.',
+        error: 'Authentication could not be completed. Please try again or use your password credentials.',
       };
     }
   };
 
   const logout = () => {
     setCurrentUser(null);
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_KEYS.CURRENT_USER);
+      sessionStorage.removeItem(LOCAL_STORAGE_KEYS.CURRENT_USER);
+    } catch {
+      // Safe ignore
+    }
     setActiveView('login');
+    if (typeof window !== 'undefined') {
+      window.location.hash = '';
+      window.history.replaceState(null, '', window.location.pathname);
+    }
   };
 
   const switchUser = (role: 'instructor' | 'registrar') => {
+    if (!currentUser) return; // Prevent role switching when unauthenticated
     const target = users.find((u) => u.role === role);
     if (target) {
       setCurrentUser(target);
+      try {
+        sessionStorage.setItem(LOCAL_STORAGE_KEYS.CURRENT_USER, JSON.stringify(target));
+      } catch {
+        // Safe ignore
+      }
       setActiveView('dashboard');
     }
   };

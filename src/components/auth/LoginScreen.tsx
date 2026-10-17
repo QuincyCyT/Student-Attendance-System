@@ -72,18 +72,18 @@ export const LoginScreen: React.FC = () => {
 
     setTimeout(() => {
       // First try exact user/email and password entered
-      let result = login(enteredLogin, passToLogin);
+      let result = login(enteredLogin, passToLogin, rememberMe);
 
       // If that didn't match and user is using demo address or username prefix, try username part
       if (!result.success && enteredLogin.includes('@')) {
         const usernamePart = enteredLogin.split('@')[0];
-        result = login(usernamePart, passToLogin);
+        result = login(usernamePart, passToLogin, rememberMe);
       }
 
       // If still not matched, check role demo account fallback
       if (!result.success && enteredLogin.includes('example@jrmsu.edu.ph')) {
         const fallbackUser = selectedRole === 'instructor' ? 'prof.miller' : 'reg.davis';
-        result = login(fallbackUser, 'password123');
+        result = login(fallbackUser, 'password123', rememberMe);
       }
 
       if (!result.success) {
