@@ -16,11 +16,11 @@ import {
 } from 'lucide-react';
 
 export const LoginScreen: React.FC = () => {
-  const { login, loginWithGoogle, setActiveView, isDatabaseReady } = useApp();
+  const { login, setActiveView } = useApp();
 
   const [selectedRole, setSelectedRole] = useState<'instructor' | 'registrar' | 'super_admin'>('instructor');
-  const [email, setEmail] = useState('prof.miller@jrmsu.edu.ph');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -31,38 +31,6 @@ export const LoginScreen: React.FC = () => {
     setSelectedRole(role);
     setErrorMessage('');
     setInfoMessage('');
-    if (role === 'instructor') {
-      setEmail('prof.miller@jrmsu.edu.ph');
-      setPassword('password123');
-    } else if (role === 'registrar') {
-      setEmail('reg.davis@jrmsu.edu.ph');
-      setPassword('password123');
-    } else {
-      setEmail('admin@university.edu');
-      setPassword('password123');
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setErrorMessage('');
-    setInfoMessage('');
-    setIsLoading(true);
-    try {
-      const res = await loginWithGoogle();
-      if (!res.success && !res.cancelled) {
-        setErrorMessage(res.error || 'Google Sign-In could not be completed.');
-      }
-    } catch (err: any) {
-      if (
-        !err?.message?.includes('popup-closed-by-user') &&
-        !err?.message?.includes('cancelled-popup-request') &&
-        err?.code !== 'auth/popup-closed-by-user'
-      ) {
-        setErrorMessage(err.message || 'Google Sign-In error.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -75,24 +43,13 @@ export const LoginScreen: React.FC = () => {
     const passToLogin = password.trim();
 
     setTimeout(() => {
-      // First try exact user/email and password entered
+      // Authenticate with exact username or email
       let result = login(enteredLogin, passToLogin, rememberMe);
 
-      // If that didn't match and user is using demo address or username prefix, try username part
+      // If user typed an institutional email, also check against prefix username
       if (!result.success && enteredLogin.includes('@')) {
         const usernamePart = enteredLogin.split('@')[0];
         result = login(usernamePart, passToLogin, rememberMe);
-      }
-
-      // If still not matched, check role demo account fallback
-      if (!result.success && (enteredLogin.includes('example@jrmsu.edu.ph') || enteredLogin === 'admin@university.edu')) {
-        const fallbackUser =
-          selectedRole === 'super_admin'
-            ? 'super.admin'
-            : selectedRole === 'instructor'
-            ? 'prof.miller'
-            : 'reg.davis';
-        result = login(fallbackUser, 'password123', rememberMe);
       }
 
       if (!result.success) {
@@ -215,43 +172,6 @@ export const LoginScreen: React.FC = () => {
               </button>
             </div>
 
-            {/* Google One-Click Institutional Sign-In */}
-            <button
-              id="btn-google-signin"
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-[10px] text-xs font-semibold text-slate-700 bg-white border border-purple-200 hover:bg-[#FAF4F8] shadow-xs hover:shadow transition-all mb-4 disabled:opacity-50"
-            >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-              <span>Continue with University Google Account</span>
-            </button>
-
-            <div className="relative flex items-center justify-center my-3">
-              <div className="border-t border-purple-200/60 w-full" />
-              <span className="bg-white px-2 text-[10.5px] font-semibold text-slate-400 uppercase tracking-wider">
-                Or with credentials
-              </span>
-              <div className="border-t border-purple-200/60 w-full" />
-            </div>
-
             {/* Error Message */}
             {errorMessage && (
               <div
@@ -294,6 +214,7 @@ export const LoginScreen: React.FC = () => {
                     id="email-input"
                     type="text"
                     required
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="example@jrmsu.edu.ph or username"
@@ -327,6 +248,7 @@ export const LoginScreen: React.FC = () => {
                     id="password-input"
                     type={showPassword ? 'text' : 'password'}
                     required
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
@@ -343,8 +265,8 @@ export const LoginScreen: React.FC = () => {
                 </div>
               </div>
 
-              {/* Checkbox "Remember me" & Pill Badge "Dual Auth Required" */}
-              <div className="flex items-center justify-between pt-0.5">
+              {/* Checkbox "Remember me" */}
+              <div className="flex items-center pt-0.5">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     id="remember-me-checkbox"
@@ -355,10 +277,6 @@ export const LoginScreen: React.FC = () => {
                   />
                   <span className="text-xs text-slate-600 font-medium">Remember me</span>
                 </label>
-
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#F5E6F2] text-[#5B3765] border border-[#5B3765]/20">
-                  Dual Auth Required
-                </span>
               </div>
 
               {/* Full-width Solid Purple Rounded "Login" Button */}
@@ -393,13 +311,9 @@ export const LoginScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Test Demo Hint */}
-          <div className="w-full max-w-[420px] mt-3.5 flex items-center justify-between text-[11px] text-slate-500 px-1">
-            <span>Role: {selectedRole === 'instructor' ? 'Instructor (prof.miller)' : 'Registrar (reg.davis)'}</span>
-            <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              <CheckCircle className="w-3 h-3" />
-              1-Click Ready
-            </span>
+          {/* Institutional Caption */}
+          <div className="w-full max-w-[420px] mt-3.5 text-center text-[11px] text-slate-400">
+            Official Academic Attendance & Classroom Governance • College of Computing Studies
           </div>
 
         </div>

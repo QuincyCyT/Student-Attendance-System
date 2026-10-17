@@ -6,11 +6,12 @@
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
-        "username": { "type": "string", "minLength": 3, "maxLength": 64 },
+        "username": { "type": "string", "minLength": 2, "maxLength": 64 },
         "email": { "type": "string", "format": "email", "maxLength": 128 },
         "fullName": { "type": "string", "minLength": 1, "maxLength": 128 },
-        "role": { "type": "string", "enum": ["instructor", "registrar"] },
+        "role": { "type": "string", "enum": ["instructor", "registrar", "super_admin"] },
         "department": { "type": "string", "maxLength": 100 },
+        "employeeId": { "type": "string", "maxLength": 64 },
         "password": { "type": "string", "minLength": 6, "maxLength": 128 },
         "createdAt": { "type": "string", "maxLength": 64 }
       },
@@ -23,15 +24,14 @@
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
         "studentId": { "type": "string", "maxLength": 64 },
-        "firstName": { "type": "string", "maxLength": 64 },
-        "lastName": { "type": "string", "maxLength": 64 },
+        "fullName": { "type": "string", "maxLength": 128 },
         "email": { "type": "string", "format": "email", "maxLength": 128 },
-        "yearLevel": { "type": "string", "maxLength": 32 },
-        "program": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 64 },
         "sectionId": { "type": "string", "maxLength": 64 },
-        "avatar": { "type": "string", "maxLength": 256 }
+        "yearLevel": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
       },
-      "required": ["studentId", "firstName", "lastName", "email", "sectionId"]
+      "required": ["studentId", "fullName", "email", "courseId", "sectionId"]
     },
     "instructor": {
       "title": "Instructor",
@@ -40,13 +40,12 @@
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
         "employeeId": { "type": "string", "maxLength": 64 },
-        "name": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "maxLength": 128 },
         "email": { "type": "string", "format": "email", "maxLength": 128 },
         "department": { "type": "string", "maxLength": 100 },
-        "title": { "type": "string", "maxLength": 100 },
-        "avatar": { "type": "string", "maxLength": 256 }
+        "title": { "type": "string", "maxLength": 100 }
       },
-      "required": ["employeeId", "name", "email", "department"]
+      "required": ["employeeId", "fullName", "email", "department"]
     },
     "course": {
       "title": "Course",
@@ -56,11 +55,10 @@
         "id": { "type": "string", "maxLength": 128 },
         "code": { "type": "string", "maxLength": 32 },
         "title": { "type": "string", "maxLength": 128 },
-        "units": { "type": "number" },
-        "department": { "type": "string", "maxLength": 100 },
-        "description": { "type": "string", "maxLength": 500 }
+        "credits": { "type": "number" },
+        "department": { "type": "string", "maxLength": 100 }
       },
-      "required": ["code", "title", "units", "department"]
+      "required": ["code", "title", "credits", "department"]
     },
     "section": {
       "title": "Section",
@@ -68,15 +66,14 @@
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 64 },
         "courseId": { "type": "string", "maxLength": 64 },
-        "sectionName": { "type": "string", "maxLength": 64 },
-        "schedule": { "type": "string", "maxLength": 128 },
-        "room": { "type": "string", "maxLength": 64 },
         "instructorId": { "type": "string", "maxLength": 64 },
-        "capacity": { "type": "number" },
-        "semester": { "type": "string", "maxLength": 64 }
+        "room": { "type": "string", "maxLength": 64 },
+        "schedule": { "type": "string", "maxLength": 128 },
+        "capacity": { "type": "number" }
       },
-      "required": ["courseId", "sectionName", "schedule", "room", "instructorId"]
+      "required": ["name", "courseId", "instructorId", "room", "schedule"]
     },
     "attendanceRecord": {
       "title": "AttendanceRecord",
@@ -84,15 +81,15 @@
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
         "sectionId": { "type": "string", "maxLength": 64 },
         "studentId": { "type": "string", "maxLength": 64 },
-        "date": { "type": "string", "maxLength": 32 },
-        "status": { "type": "string", "enum": ["present", "late", "absent", "excused"] },
+        "status": { "type": "string", "enum": ["Present", "Absent", "Late", "Excused"] },
         "remarks": { "type": "string", "maxLength": 256 },
-        "recordedAt": { "type": "string", "maxLength": 64 },
-        "recordedBy": { "type": "string", "maxLength": 128 }
+        "markedByUserId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 }
       },
-      "required": ["sectionId", "studentId", "date", "status"]
+      "required": ["date", "sectionId", "studentId", "status"]
     }
   },
   "firestore": {
@@ -106,7 +103,7 @@
     },
     "/instructors/{instructorId}": {
       "schema": "instructor",
-      "description": "Instructors list"
+      "description": "Instructors directory"
     },
     "/courses/{courseId}": {
       "schema": "course",

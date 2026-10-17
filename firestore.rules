@@ -16,7 +16,7 @@ service cloud.firestore {
       return data.username is string && data.username.size() >= 2 && data.username.size() <= 64
         && data.email is string && data.email.size() <= 128
         && data.fullName is string && data.fullName.size() <= 128
-        && data.role in ['instructor', 'registrar'];
+        && data.role in ['instructor', 'registrar', 'super_admin'];
     }
 
     function isValidStudent(data) {

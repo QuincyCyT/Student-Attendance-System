@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   LogOut,
-  RotateCcw,
   Search,
   Bell,
   Menu,
@@ -15,7 +14,7 @@ import {
 import { PantherLogo } from './PantherLogo';
 
 export const Header: React.FC = () => {
-  const { currentUser, logout, resetToSampleData } = useApp();
+  const { currentUser, logout } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!currentUser) return null;
@@ -89,17 +88,6 @@ export const Header: React.FC = () => {
               <span>{roleLabel}</span>
             </div>
 
-            {/* Reset Data (Desktop / Tablet) */}
-            <button
-              id="btn-reset-demo"
-              type="button"
-              onClick={() => resetToSampleData()}
-              className="p-1.5 text-[#86688D] hover:text-[#5B3765] hover:bg-[#FAF0F7] rounded-xl transition-colors hidden sm:block"
-              title="Reset Sample Data"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-
             {/* Notification Bell */}
             <div className="p-1.5 text-[#86688D] hover:text-[#5B3765] hover:bg-[#FAF0F7] rounded-xl transition-colors relative cursor-pointer hidden md:block">
               <Bell className="w-4 h-4" />
@@ -166,21 +154,6 @@ export const Header: React.FC = () => {
             <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[#FAF0F7] text-[#5B3765] border border-[#EEDEEB]">
               Sem 1 · 2026
             </span>
-          </div>
-
-          {/* Reset Sample Data on mobile */}
-          <div className="pt-1">
-            <button
-              type="button"
-              onClick={() => {
-                resetToSampleData();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold text-[#73567A] bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Sample Data</span>
-            </button>
           </div>
         </div>
       )}
